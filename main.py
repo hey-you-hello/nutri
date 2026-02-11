@@ -1,6 +1,6 @@
 import random
 import math
-
+from collections import Counter
 # name:angrypartyヾ(≧▽≦*)o
 
 def sigmoid(x):
@@ -12,7 +12,7 @@ def sigmoid(x):
         return z / (1 + z)
 
 嚴重程度 = list(range(-32, 33))
-murmur = True
+murmur = False
 
 def m(txt, self):
     # 這裡修正了 mapping，確保類別名稱能正確對應
@@ -91,6 +91,13 @@ class Weight():
         # 這裡根據目前的狀態決定如何處理數值
         opt = [-1, -val, 0, val, 1]
         return opt[self._idx]
+def analy(envs):
+    l=[]
+    for env in envs:
+        for n in env.species:
+            for r in n.eyes:
+                l.append(r.w.name)
+    return Counter(l)
 
 class Output():
     id = 0
@@ -138,6 +145,7 @@ class Eyes():
     
     @property
     def 目前怒氣(self):
+        
         return max(0,self._目前怒氣)
     
     @目前怒氣.setter
@@ -145,6 +153,7 @@ class Eyes():
         self._目前怒氣 = v
 
     def 反應(self):
+        self.目前怒氣-=3
         if isinstance(self.處理的貨物, Output):
             self.處理的貨物.s.反應()
             
@@ -290,13 +299,18 @@ if __name__ == '__main__':
     g=Env(2,2)
     
     
-    x=k([2,1])
+    x=k([-2,1])
     ou=g(x)
     for n in range(10):
+        x=k([-2,1])
+        g(x)
         g.blame([random.choice([-32,16]),-32])
         g.反應()
-    aou=k([2,1])
+        print(analy([g,k]),'epoch',n)
+    aou=k([-2,1])
+    aou=g(x)
     print(ou)
     print('after',aou)
     
     
+#-32 
