@@ -46,7 +46,8 @@ def loss_fn(out, target):
 
 def h(flag):
     return 1 if flag > 0 else 0
-
+def w(opt):
+    return 1 if opt>= 0 else -1
 class Weight():
     chance = [0.1, 0.4, 0.4, 0.4, 0.1]
     
@@ -54,8 +55,8 @@ class Weight():
         self.id = 0
         self.idx = idx
         self._立場 = h(idx)
-        self.立場 = 1 if idx > 0 else -1
-        self._idx = idx + 2
+        self._idx=idx+2
+        
         
     @property
     def name(self):
@@ -80,11 +81,15 @@ class Weight():
 
     def __repr__(self):
         return f'個性:{self.name}'
-        
+    @property
+    def 立場(self):
+        opt = [-1, -1, 0, 1, 1]
+        return opt[self._idx]
+
+
     def update(self):
         idx = self.idx
-        self._立場 = h(idx)
-        self.立場 = 1 if idx > 0 else -1
+       
         self._idx = idx + 2
 
     def handle(self, val):
@@ -124,7 +129,7 @@ class Output():
 class Eyes():
     def __init__(self):
         self.w = Weight.sit()
-        self.忍耐上限 = random.randint(64, 128)
+        self.忍耐上限 = random.randint(32,64)
         self.比較閾值 = 0.5
         self._目前怒氣 = 0
         self.id = random.randint(0, int(10e7))
@@ -146,14 +151,14 @@ class Eyes():
     @property
     def 目前怒氣(self):
         
-        return max(0,self._目前怒氣)
+        return self._目前怒氣
     
     @目前怒氣.setter
     def 目前怒氣(self, v):
         self._目前怒氣 = v
 
     def 反應(self):
-        self.目前怒氣-=3
+        
         if isinstance(self.處理的貨物, Output):
             self.處理的貨物.s.反應()
             
@@ -164,10 +169,11 @@ class Eyes():
             
             old_name = self.w.name
             changed = self.w.改變(pos)
-            self.w.update()
+            
             
             if changed:
                 m(f'翻桌! 怒氣溢出{excess}，我從個性:{old_name}變為{self.w}', self)
+                self.w.update()
             else:
                 m(f'翻桌! 但我已經是最極端了 ({self.w})，變得更敏感', self)
                 self.忍耐上限 -= 10
@@ -181,20 +187,36 @@ class Eyes():
         if isinstance(val, Output):
             val = val.v
         
-        self.目前怒氣 += flag*self.w.立場
+        delta=flag*self.w.立場*w(val)
+        if delta>0:
+            delta=delta*self.w.立場*-1
+        else:
+            
+            if val==0:
+                delta=flag*-1
+            elif self.w.立場==0:
+                delta=(flag*w(val)*-1)//2
+            
+            else:
+                delta=0
+        
+
+
+        #-32 1 1 
+        self.目前怒氣 +=delta
         m(f"我目前的怒氣為［{self.目前怒氣}/{self.忍耐上限}],立場:{self.w.name}", self)
         if isinstance(self.處理的貨物, Output):
             self.處理的貨物.blame(flag, w=self.w) 
 
 class Species():
-    id = 0
+    
     def __init__(self, num_eyes, id=None):
         if id is None:
             id = random.randint(0, int(10e7))
         
         self.eyes = []
-        self.id = Species.id
-        Species.id += 1
+        self.id = id
+        
         self.rate = 0
         for n in range(num_eyes):
             e = Eyes()
@@ -235,17 +257,20 @@ class Species():
 
 class Env():
     id = 0
-    def __init__(self, *shape):
+    def __init__(self, *shape,id=None):
         if len(shape) != 2:
             raise Exception("目前只開放二維")
-        Env.id += 1
-        self.id = Env.id
+        if id ==None:
+            Env.id += 1
+            self.id = Env.id
+        else:
+            self.id=id
         dim1 = shape[0]
         dim2 = shape[1]
         self.dim = dim2
         self.species = []
         for n in range(dim2):
-            self.species.append(Species(dim1, id=n))
+            self.species.append(Species(dim1, id=f'{self.id}-{n}'))
         self.species.sort(key=lambda x: x.rate)
     
     def handle(self, val):
@@ -294,23 +319,29 @@ class Env():
         return self.species.__repr__()
 
 if __name__ == '__main__':
-    k = Env(2, 2) 
+    k = Env(1, 1,id='k') 
     
-    g=Env(2,2)
-    
-    
-    x=k([-2,1])
-    ou=g(x)
+
+   
     for n in range(10):
-        x=k([-2,1])
-        g(x)
-        g.blame([random.choice([-32,16]),-32])
-        g.反應()
-        print(analy([g,k]),'epoch',n)
-    aou=k([-2,1])
-    aou=g(x)
-    print(ou)
-    print('after',aou)
+        x=k([-1])
+        k.blame([-32])
+        k.反應()
+        
+        print(analy([k]))
+    print(x)
+    
+        
+    
+   
+    #g=Env(2,2,id='g')
+    
+    
+    
+   
+    #print(analy([g,k]),'epoch',n)
+    
+    
     
     
 #-32 
