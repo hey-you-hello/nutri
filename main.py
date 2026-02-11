@@ -1,21 +1,16 @@
 import random
 import math
 from collections import Counter
-# name:angrypartyヾ(≧▽≦*)o
+import time
 
-def sigmoid(x):
-    if x >= 0:
-        z = math.exp(-x)
-        return 1 / (1 + z)
-    else:
-        z = math.exp(x)
-        return z / (1 + z)
+
+
 
 嚴重程度 = list(range(-32, 33))
 murmur = False
 
 def m(txt, self):
-    # 這裡修正了 mapping，確保類別名稱能正確對應
+    
     ch = {
         Eyes: "眼睛",
         Species: "生物",
@@ -32,16 +27,15 @@ def m(txt, self):
 def to_flag(val):
     step = 1/32
     idx = int(val/step)
-    idx += 32
-    idx = max(0, min(idx, len(嚴重程度) - 1))
-    return idx**2
+    
+    return idx
 
 def loss_fn(out, target):
     if len(out) != len(target):
         raise Exception(f"Loss 維度不匹配: 輸出{len(out)} vs 目標{len(target)}")
     loss = []
     for o, t in zip(out, target):
-        loss.append((o, to_flag(o.v - t)))
+        loss.append(to_flag(o.v-t))
     return loss
 
 def h(flag):
@@ -129,7 +123,7 @@ class Output():
 class Eyes():
     def __init__(self):
         self.w = Weight.sit()
-        self.忍耐上限 = random.randint(32,64)
+        self.忍耐上限 = random.randint(32,128)
         self.比較閾值 = 0.5
         self._目前怒氣 = 0
         self.id = random.randint(0, int(10e7))
@@ -151,7 +145,7 @@ class Eyes():
     @property
     def 目前怒氣(self):
         
-        return self._目前怒氣
+        return max(-256,min(self._目前怒氣,256))
     
     @目前怒氣.setter
     def 目前怒氣(self, v):
@@ -176,7 +170,7 @@ class Eyes():
                 self.w.update()
             else:
                 m(f'翻桌! 但我已經是最極端了 ({self.w})，變得更敏感', self)
-                self.忍耐上限 -= 10
+                
                 
             self.目前怒氣 = 0
             return 1
@@ -237,7 +231,7 @@ class Species():
         
         
         
-        s = math.tanh(s*2)
+        s = math.tanh(s/len(self.eyes))
         m(f"輸出{s}", self)
         return Output(s, self)
 
@@ -317,19 +311,31 @@ class Env():
             n.反應()
     def __str__(self):
         return self.species.__repr__()
-
+target=[0.5,0.2]
 if __name__ == '__main__':
-    k = Env(1, 1,id='k') 
+    k = Env(2, 30,id='k') 
+    g = Env(30, 60,id='g') 
+    p = Env(60, 2,id='m') 
+    
     
 
-   
-    for n in range(10):
-        x=k([-1])
-        k.blame([-32])
-        k.反應()
+    st=time.time()
+    for n in range(60):
+        x=k([-1,1])
+        x=g(x)
+        x=p(x)
         
-        print(analy([k]))
-    print(x)
+        flag=loss_fn(x,target)
+        
+        print([n.v for n in x])
+        print(flag)
+        p.blame(flag)
+        p.反應()
+        
+        print(analy([k,g,p]),n)
+        
+    endt=time.time()
+    print('用時:',endt-st)
     
         
     
