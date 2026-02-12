@@ -27,10 +27,10 @@ def m(txt, self):
 def to_flag(val):
     step = 1/32
     idx = int(val/step)
+    sign= 1 if val>0 else -1
+    idx=min(idx **2,32)
     
-    idx=idx 
-    
-    return idx
+    return idx*sign
 
 def loss_fn(out, target):
     if len(out) != len(target):
@@ -123,9 +123,12 @@ class Output():
         return f"Out:{self.v}"
 
 class Eyes():
-    def __init__(self):
+    def __init__(self,is智缺=False):
         self.w = Weight.sit()
         self.忍耐上限 = random.randint(32,64)
+        if not is智缺 and random.random()<0.1:
+            is智缺=True
+        self.is智缺=is智缺
         self.比較閾值 = 0.5
         self._目前怒氣 = 0
         self.id = random.randint(0, int(10e7))
@@ -135,6 +138,7 @@ class Eyes():
         return f'<eyes {self.id} with {self.w}>'
     
     def handle(self, item):
+        
         self.處理的貨物 = item
         m(f"得到{item}", self)
         if isinstance(item, Output):
@@ -146,7 +150,8 @@ class Eyes():
     
     @property
     def 目前怒氣(self):
-        
+        if self.is智缺:
+            return 0
         return max(-64,min(self._目前怒氣,64))
     
     @目前怒氣.setter
@@ -315,14 +320,14 @@ class Env():
     def __str__(self):
         return self.species.__repr__()
 target=[[0.2,0.4],[0,0]]
-trin=[[0.8],[0.2]]
+trin=[[0.8,0.3],[0.2,0.1]]
 
 
 if __name__ == '__main__':
      
-    a=Env(2,200,id='a')
-    b=Env(200,1)
-    for n in range(50):
+    a=Env(2,400,id='a')
+    b=Env(400,2)
+    for n in range(100):
         ridx=random.choice([0,1])
         x=a(target[ridx])
         x=b(x)
@@ -331,6 +336,7 @@ if __name__ == '__main__':
         print(f)
         b.blame(f)
         b.反應()
+        print(analy([a,b]))
 for n in target:        
     x=a(n)
     x=b(x)
