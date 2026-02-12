@@ -28,6 +28,8 @@ def to_flag(val):
     step = 1/32
     idx = int(val/step)
     
+    idx=idx 
+    
     return idx
 
 def loss_fn(out, target):
@@ -87,7 +89,7 @@ class Weight():
         self._idx = idx + 2
 
     def handle(self, val):
-        # 這裡根據目前的狀態決定如何處理數值
+        
         opt = [-1, -val, 0, val, 1]
         return opt[self._idx]
 def analy(envs):
@@ -118,12 +120,12 @@ class Output():
                 self.s.blame(flag)
 
     def __repr__(self):
-        return f"Out:{self.v} from {self.s}"
+        return f"Out:{self.v}"
 
 class Eyes():
     def __init__(self):
         self.w = Weight.sit()
-        self.忍耐上限 = random.randint(32,128)
+        self.忍耐上限 = random.randint(32,64)
         self.比較閾值 = 0.5
         self._目前怒氣 = 0
         self.id = random.randint(0, int(10e7))
@@ -145,7 +147,7 @@ class Eyes():
     @property
     def 目前怒氣(self):
         
-        return max(-256,min(self._目前怒氣,256))
+        return max(-64,min(self._目前怒氣,64))
     
     @目前怒氣.setter
     def 目前怒氣(self, v):
@@ -155,7 +157,8 @@ class Eyes():
         
         if isinstance(self.處理的貨物, Output):
             self.處理的貨物.s.反應()
-            
+        if random.random()<0.1:
+            self.目前怒氣=0
         if abs(self.目前怒氣) > self.忍耐上限:
             excess = abs(self.目前怒氣) - self.忍耐上限
             step = 1 + int(excess / 64)
@@ -231,7 +234,7 @@ class Species():
         
         
         
-        s = math.tanh(s/len(self.eyes))
+        s = math.tanh(s/len(self.eyes)*3)
         m(f"輸出{s}", self)
         return Output(s, self)
 
@@ -311,43 +314,34 @@ class Env():
             n.反應()
     def __str__(self):
         return self.species.__repr__()
-target=[0.5,0.2]
-if __name__ == '__main__':
-    k = Env(2, 30,id='k') 
-    g = Env(30, 60,id='g') 
-    p = Env(60, 2,id='m') 
-    
-    
+target=[[0.2,0.4],[0,0]]
+trin=[[0.8],[0.2]]
 
-    st=time.time()
-    for n in range(60):
-        x=k([-1,1])
-        x=g(x)
-        x=p(x)
-        
-        flag=loss_fn(x,target)
-        
-        print([n.v for n in x])
-        print(flag)
-        p.blame(flag)
-        p.反應()
-        
-        print(analy([k,g,p]),n)
-        
-    endt=time.time()
-    print('用時:',endt-st)
+
+if __name__ == '__main__':
+     
+    a=Env(2,200,id='a')
+    b=Env(200,1)
+    for n in range(50):
+        ridx=random.choice([0,1])
+        x=a(target[ridx])
+        x=b(x)
+        print(x)
+        f=loss_fn(x,trin[ridx])
+        print(f)
+        b.blame(f)
+        b.反應()
+for n in target:        
+    x=a(n)
+    x=b(x)
+    print(x)
+   
+    
     
         
     
    
-    #g=Env(2,2,id='g')
+ 
     
     
     
-   
-    #print(analy([g,k]),'epoch',n)
-    
-    
-    
-    
-#-32 
